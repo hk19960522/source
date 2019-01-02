@@ -33,16 +33,25 @@ void MAIN_CHAR::attachCamera(Camera *a_Camera)
 	mCamera = a_Camera;
 	FrameEvent evt;
 	evt.timeSinceLastFrame = 0;
-	walkForward(evt);
+	walkForward(evt, 1.0);
 }
 
 void MAIN_CHAR::updateViewDirection()
 {
+	Vector3 actualDirection = mQuaternion*mInitDirection;
+	Quaternion q = mCamera->getOrientation();
+	Quaternion q0 = Quaternion(Radian(0), Vector3(1, 0, 0));
+	q = q*q0;
+	actualDirection = mCamera->getRealDirection();
 
-
+	Vector3 p = mSceneNode->getPosition();
+	actualDirection.y = 0.0;
+	
+	mSceneNode->lookAt(p+ actualDirection*10, Node::TS_WORLD);
+	mSceneNode->yaw(Radian(3.14159*0.5));
 }
 
-void MAIN_CHAR::walkForward(const Ogre::FrameEvent& evt)
+void MAIN_CHAR::walkForward(const Ogre::FrameEvent& evt, float energy)
 {
 	//exit(1);
 	Vector3 actualDirection = mQuaternion*mInitDirection;
@@ -68,7 +77,7 @@ void MAIN_CHAR::walkForward(const Ogre::FrameEvent& evt)
 	actualDirection = mCamera->getRealDirection();
 	Vector3 d;
 	mSpeedFactor = 100;
-	d = actualDirection*mSpeedFactor*evt.timeSinceLastFrame;
+	d = actualDirection*mSpeedFactor*evt.timeSinceLastFrame * energy * energy * energy;
 
 	//logMessage("Direction\n");
 	//logMessage(actualDirection);
@@ -85,11 +94,11 @@ void MAIN_CHAR::walkForward(const Ogre::FrameEvent& evt)
 
 	std::cout << "Position : " << pos << std::endl;
 	Vector3 e = actualDirection*20;
-	mCamera->setPosition(pos+mEyePosition+e);
+	mCamera->setPosition(pos+mEyePosition);
 
 }
 
-void MAIN_CHAR::walkBackward(const Ogre::FrameEvent& evt)
+void MAIN_CHAR::walkBackward(const Ogre::FrameEvent& evt, float energy)
 {
 	Vector3 actualDirection = mQuaternion*mInitDirection;
 	Quaternion q = mCamera->getOrientation();
@@ -114,7 +123,7 @@ void MAIN_CHAR::walkBackward(const Ogre::FrameEvent& evt)
 	actualDirection = mCamera->getRealDirection();
 	Vector3 d;
 	mSpeedFactor = 100;
-	d = -actualDirection*mSpeedFactor*evt.timeSinceLastFrame;
+	d = -actualDirection*mSpeedFactor*evt.timeSinceLastFrame * energy * energy * energy;
 
 	logMessage("Direction\n");
 	logMessage(actualDirection);
@@ -130,7 +139,7 @@ void MAIN_CHAR::walkBackward(const Ogre::FrameEvent& evt)
 	mSceneNode->setPosition(pos);
 
 	Vector3 e = -actualDirection*20;
-	mCamera->setPosition(pos+mEyePosition+e);
+	mCamera->setPosition(pos+mEyePosition);
 }
 
 
@@ -161,13 +170,14 @@ Vector3 MAIN_CHAR::getWeaponPosition() const
 	return p;
 }
 
-void MAIN_CHAR::update(const Ogre::FrameEvent& evt)
+void MAIN_CHAR::update(const Ogre::FrameEvent& evt, float energy)
 {
+	
 	if (mActionMode & ACTION_WALK_FORWARD) {
-		walkForward(evt);
+		walkForward(evt, energy);
 	}
 	if (mActionMode & ACTION_WALK_BACKWARD) {
-		walkBackward(evt);
+		walkBackward(evt, energy);
 	}
 		
 	fireWeapon();
@@ -196,6 +206,12 @@ void MAIN_CHAR::update(const Ogre::FrameEvent& evt)
 		mAnimationState->addTime(evt.timeSinceLastFrame*sf);
 	}
 	
+	// Update top camera
+	if (mTopCamera) {
+		Vector3 newPos = mSceneNode->getPosition();
+		newPos.y = mTopCamera->getPosition().y;
+		mTopCamera->setPosition(newPos);
+	}
 }
 
 void MAIN_CHAR::fireWeapon()
@@ -217,4 +233,9 @@ void MAIN_CHAR::setFireAction_Normal()
 void MAIN_CHAR::unsetFireAction_Normal()
 {
 	mFireActionMode ^= FIRE_ACTION_NORMAL;
+}
+
+void MAIN_CHAR::setTopCamera(Camera *cam)
+{
+	mTopCamera = cam;
 }

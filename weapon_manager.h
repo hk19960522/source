@@ -20,13 +20,14 @@ protected:
 	int mMaxNum;
 	int mCurBulletsNum;
 
+	SceneNode *mTargetNode;
 	Vector3 mTargetPos;
 	Real mTargetRadius;
 	bool mFlgTarget;
 
 public:
 	WEAPON_MANAGER(SceneManager *a_SceneMgr);
-	void setTarget( const Vector3 &pos, Real radius );
+	void setTarget(SceneNode *target, Real radius );
 	virtual void setMaxBulletsNum(int a_Num);
 
 	virtual void fire_Normal(const Vector3 &pos, const Vector3 &direction);

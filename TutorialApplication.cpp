@@ -15,11 +15,18 @@ BasicTutorial_00::BasicTutorial_00(void) {
 	//
 	mMainChar = 0;
 	mCameraDistance = 0;
-	mKeyPressedZoomMode = 0;
+	mKeyPressedZoomMode = ZOOM_NONE;
 	mCameraDistanceAdjustSpeed = 0;
 	mCameraDistanceSlowDownSpeed = 0;
 
 	mSphereTimeCount = 0;
+
+	mDialogueScore = 0;
+	mDialogueUpdateSpeed = 0;
+	mDialoguePosition = 0;
+	mDialogueGrowDirection = true;
+
+	mEnergy = 1.0;
 }
 
 //
@@ -28,7 +35,7 @@ BasicTutorial_00::BasicTutorial_00(void) {
 bool BasicTutorial_00::mouseMoved( const OIS::MouseEvent &arg )
 {
 	bool flg = BaseApplication::mouseMoved(arg);
-	//mMainChar->updateViewDirection();
+	mMainChar->updateViewDirection();
 	return flg;
 }
 
@@ -53,6 +60,14 @@ bool BasicTutorial_00::keyPressed( const OIS::KeyEvent &arg )
 		}
 	}
 
+	if (arg.key == OIS::KC_A) {
+		mKeyPressedZoomMode |= ZOOM_IN;
+	}
+
+	if (arg.key == OIS::KC_D) {
+		mKeyPressedZoomMode |= ZOOM_OUT;
+	}
+
 	if (arg.key == OIS::KC_SPACE)
 	{
 		mMainChar->setFireAction_Normal();
@@ -72,6 +87,14 @@ bool BasicTutorial_00::keyReleased( const OIS::KeyEvent &arg )
 	
 	if (arg.key == OIS::KC_S) {
 		mMainChar->unsetWalkBackward();
+	}
+
+	if (arg.key == OIS::KC_A) {
+		mKeyPressedZoomMode ^= ZOOM_IN;
+	}
+
+	if (arg.key == OIS::KC_D) {
+		mKeyPressedZoomMode ^= ZOOM_OUT;
 	}
 
 	if (arg.key == OIS::KC_SPACE)
@@ -108,8 +131,8 @@ void BasicTutorial_00::createCamera_01(void)
 {
 	mSceneMgr = mSceneMgrArr[1];
 	mCamera = mCameraArr[1] = mSceneMgr->createCamera("PlayerCam2");
-	mCamera->setPosition(Ogre::Vector3(750,100,750));
-	mCamera->lookAt(Ogre::Vector3(0,0,0));
+	mCamera->setPosition(Ogre::Vector3(750,500,750));
+	mCamera->lookAt(Ogre::Vector3(751,0,750));
 	mCamera->setNearClipDistance(5);
 	//mCameraManArr[1] = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
 
@@ -125,7 +148,7 @@ void BasicTutorial_00::createViewport_00(void)
     mCamera->setAspectRatio(
 		Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 
-	vp->setVisibilityMask(2);
+	vp->setVisibilityMask(VIEWPORT_0);
 }
 
 void BasicTutorial_00::createViewport_01(void)
@@ -135,17 +158,17 @@ void BasicTutorial_00::createViewport_01(void)
 	Ogre::Viewport* vp = mWindow->addViewport(
 		mCamera,
 		1,
-		0.25,
-		0.25,
+		0.75,
+		0,
 		0.25,
 		0.25
 		);
 	vp->setBackgroundColour(Ogre::ColourValue(0,1,0));
-	mCamera->setAspectRatio(1.0/4.0);
-
+	mCamera->setAspectRatio(
+		Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+	vp->setOverlaysEnabled(false);
+	vp->setVisibilityMask(VIEWPORT_1);
 }
-
-
 
 void BasicTutorial_00::createScene_00(void) 
 {
@@ -204,13 +227,24 @@ void BasicTutorial_00::createScene_00(void)
 	ent->setMaterialName(DATA_READER::getWaterMaterialName());
 	mSceneMgr->getRootSceneNode()->createChildSceneNode(Vector3(750, DATA_READER::getWaterCoord_Y(), 750))->attachObject(ent);
 
+	// Large Sphere
+	ent = mSceneMgr->createEntity("Large Sphere", "sphere.mesh");
+	ent->setMaterialName("Examples/Rockwall");
+	mLargeSphere = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	mLargeSphere->attachObject(ent);
+	mLargeSphere->scale(2, 2, 2);
+	mLargeSphere->setPosition(900, 100, 900);
+
 	mMainChar = new MAIN_CHAR(mSceneMgrArr[0]);
 	mMainChar->createGameObj("m", "robot.mesh");
 
 	mMainChar->attachCamera(mCameraArr[0]);
 
 	mMainChar->setMaxBulletsNum(DATA_READER::getMaxBulletsNum());
-	mMainChar->setVisibilityFlags(4);
+	mMainChar->setVisibilityFlags(VIEWPORT_1);
+	mMainChar->getWeaponManager()->setTarget(mLargeSphere, 200.0);
+	mMainChar->setTopCamera(mCameraArr[1]);
+
 	// set player's spotlight
 	mPlayerSpotlight = mSceneMgr->createLight("PlayerSpotlight");
 	mPlayerSpotlight->setType(Light::LT_SPOTLIGHT);
@@ -225,13 +259,17 @@ void BasicTutorial_00::createScene_00(void)
 	mMonsterMgr->setTargetForMonsters(mMainChar);
 	mMonsterMgr->setMaxMonstersNum(DATA_READER::getMaxMonstersNum());
 
-	// Large Sphere
-	ent = mSceneMgr->createEntity("Large Sphere", "sphere.mesh");
-	ent->setMaterialName("Examples/Rockwall");
-	mLargeSphere = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	mLargeSphere->attachObject(ent);
-	mLargeSphere->scale(2, 2, 2);
-	mLargeSphere->setPosition(900, 100, 900);
+	// UI setting
+	// Number
+	mNumberDialogue = new DIGIT_STRING_DIALOGUE(mSceneMgr, "Examples/Number");
+
+	// Life bar
+	mEnergyBar = new BAR_2D(mSceneMgr, "wago_game/LifeBar", NULL);
+	mEnergyBar->setDefaultPos(0.05, 0.3);
+	mEnergyBar->setVisibilityFlags(VIEWPORT_0);
+	mSpeedBar = new BAR_2D(mSceneMgr, "wago_game/LifeBar", NULL);
+	mSpeedBar->setDefaultPos(0.05, 0.2);
+	mSpeedBar->setVisibilityFlags(VIEWPORT_0);
 }
 
 void BasicTutorial_00::createScene_01(void) 
@@ -247,10 +285,29 @@ bool BasicTutorial_00::frameStarted(const Ogre::FrameEvent& evt)
 	bool flg = Ogre::FrameListener::frameStarted(evt);
 	mToggle += evt.timeSinceLastFrame;
     //
+
 	
-	mMainChar->update(evt);	
+	
+	// camera
+	if (mKeyPressedZoomMode & ZOOM_IN) {
+		std::cout << "camera down\n";
+		Vector3 pos = mCameraArr[1]->getPosition();
+		pos.y -= 10;
+		mCameraArr[1]->setPosition(pos);
+	}
+
+	if (mKeyPressedZoomMode & ZOOM_OUT) {
+		std::cout << "camera up\n";
+		Vector3 pos = mCameraArr[1]->getPosition();
+		pos.y += 10;
+		mCameraArr[1]->setPosition(pos);
+	}
+
+	mMainChar->update(evt, mEnergy);	
     mMonsterMgr->update(evt);
 	largeSphereMove(evt);
+	numberDialogueUpdate(evt);
+	barUpdate(evt);
 
 	mPlayerSpotlight->setPosition(mMainChar->getPosition() + Vector3(0, 20, 0)); 
 	return flg;
@@ -317,6 +374,58 @@ void BasicTutorial_00::largeSphereMove(const Ogre::FrameEvent& evt)
 
 	pos.y += (cos(mSphereTimeCount * 2.0) + 1.0) * 300.0 + 300;
 	mLargeSphere->setPosition(pos);
+}
+
+void BasicTutorial_00::numberDialogueUpdate(const Ogre::FrameEvent& evt)
+{
+
+	mDialogueUpdateSpeed += evt.timeSinceLastFrame;
+	if (mDialogueUpdateSpeed > 0.05) {
+		mDialogueUpdateSpeed -= 0.05;
+		if (mDialogueGrowDirection)
+			mDialogueScore++;
+		else 
+			mDialogueScore--;
+	}
+
+	if (mDialogueGrowDirection)
+		mDialoguePosition += evt.timeSinceLastFrame;
+	else 
+		mDialoguePosition -= evt.timeSinceLastFrame;
+
+	if (mDialogueScore > 1000 && mDialogueGrowDirection) {
+		mDialoguePosition -= evt.timeSinceLastFrame;
+		mDialogueScore = 999;
+		mDialogueGrowDirection = false;
+	}
+	if (mDialogueScore < 0 && !mDialogueGrowDirection) {
+		mDialoguePosition += evt.timeSinceLastFrame;
+		mDialogueScore = 0;
+		mDialogueGrowDirection = true;
+	}
+
+	mNumberDialogue->setScore(mDialogueScore,0.05+mDialoguePosition*0.01, 0.05);
+}
+
+void BasicTutorial_00::barUpdate(const Ogre::FrameEvent& evt)
+{
+	if ((mMainChar->getActionMode() & ACTION_WALK_FORWARD) ||
+		(mMainChar->getActionMode() & ACTION_WALK_BACKWARD)) {
+		mEnergy -= evt.timeSinceLastFrame * 0.1;
+	}
+	else {
+		mEnergy += evt.timeSinceLastFrame * 0.5;
+	}
+
+	mEnergy = std::min(1.0f, std::max(0.0f, mEnergy));
+
+	mEnergyBar->setSplit2Parts(true);
+	mEnergyBar->setInfo(mEnergy, 1.0);
+	mEnergyBar->update(0, 0);
+
+	mSpeedBar->setSplit2Parts(true);
+	mSpeedBar->setInfo(mEnergy * mEnergy * mEnergy, 1.0);
+	mSpeedBar->update(0, 0);
 }
 
 int main(int argc, char *argv[]) {

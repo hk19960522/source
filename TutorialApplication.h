@@ -22,6 +22,8 @@ This is an assignment of 3D Game Programming
 #include "BaseApplication.h"
 #include "main_char.h"
 #include "monster_manager.h"
+#include "digit_string_dialogue.h"
+#include "bar2D.h"
 
 class BasicTutorial_00 : public BaseApplication
 {
@@ -59,6 +61,8 @@ private:
 	void createScene_01();
 
 	void largeSphereMove(const Ogre::FrameEvent& evt);
+	void numberDialogueUpdate(const Ogre::FrameEvent& evt);
+	void barUpdate(const Ogre::FrameEvent& evt);
 
 	bool mFlgMotion;
 	bool mKeyPressed;
@@ -82,6 +86,19 @@ private:
 
 	SceneNode* mLargeSphere;
 	float mSphereTimeCount;
+
+	// UI
+	// number
+	DIGIT_STRING_DIALOGUE *mNumberDialogue;
+	int mDialogueScore;
+	float mDialogueUpdateSpeed;
+	float mDialoguePosition;
+	bool mDialogueGrowDirection;
+
+	// bar
+	BAR_2D *mEnergyBar;
+	BAR_2D *mSpeedBar;
+	float mEnergy;
 };
 
 #endif // #ifndef __BasicTutorial_00_h_

@@ -18,9 +18,10 @@ WEAPON_MANAGER::WEAPON_MANAGER(SceneManager *a_SceneMgr) : GAME_OBJ(a_SceneMgr)
 	mFlgTarget = false;
 }
 
-void WEAPON_MANAGER::setTarget( const Vector3 &pos, Real radius )
+void WEAPON_MANAGER::setTarget(SceneNode *target, Real radius )
 {
-	mTargetPos = pos;
+	mTargetNode = target;
+	mTargetPos = target->getPosition();
 	mTargetRadius = radius;
 	mFlgTarget = true;
 }
@@ -70,7 +71,7 @@ void WEAPON_MANAGER::update(const Ogre::FrameEvent& evt)
 		g->update(evt);
 
 		if ( mFlgTarget ) {
-			g->hitTarget_Sphere( mTargetPos, mTargetRadius );
+			g->hitTarget_Sphere( mTargetNode->getPosition(), mTargetRadius );
 		}
 		if (!g->isAlive()) {
 			mUsedWeaponsArr[i] = false;

@@ -18,6 +18,13 @@ using namespace Ogre;
 #define FIRE_ACTION_NONE	0x0
 #define FIRE_ACTION_NORMAL	0x0001
 
+#define ZOOM_NONE 0x0000
+#define ZOOM_IN 0x0001
+#define ZOOM_OUT 0x0002
+
+#define VIEWPORT_0 0x0001
+#define VIEWPORT_1 0x0002
+
 class GAME_OBJ {
 private:
 	static int gs_NameIndex;
@@ -64,6 +71,7 @@ public:
 	bool isAlive() const;
 	void makeAlive(bool flg = true);
 	void setLife(Real cLife, Real cMaxLife = -1);
+	unsigned int getActionMode() { return mActionMode; };
 
 	void setPosition(const Vector3 &pos);
 	void setInitPosition(const Vector3 &pos);
