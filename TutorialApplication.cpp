@@ -204,15 +204,15 @@ void BasicTutorial_00::createScene_00(void)
 	Vector3 pos;
 	setOffParticleSystem(fNode, "explosion", pos);
 
-	//Light *light;
-	//light = mSceneMgr->createLight("Light1"); 
-	//light->setType(Light::LT_POINT);
-	////light->setType(Light::LT_DIRECTIONAL);
-	//light->setPosition(Vector3(0, 450, 250)+org); 
-	//light->setDiffuseColour(0.7, 0.7, 0.7);		
-	//light->setSpecularColour(1.0, 1.0, 1.0);	
-	//light->setDirection(Vector3(1, 1, 1));
-	//mLight0 = light;
+	Light *light;
+	light = mSceneMgr->createLight("Light1"); 
+	light->setType(Light::LT_POINT);
+	//light->setType(Light::LT_DIRECTIONAL);
+	light->setPosition(Vector3(0, 450, 250)+org); 
+	light->setDiffuseColour(0.7, 0.7, 0.7);		
+	light->setSpecularColour(1.0, 1.0, 1.0);	
+	light->setDirection(Vector3(1, 1, 1));
+	mLight0 = light;
 
 	// plane
 	Plane plane(Vector3::UNIT_Y, 0); 
@@ -244,6 +244,8 @@ void BasicTutorial_00::createScene_00(void)
 	mMainChar->setVisibilityFlags(VIEWPORT_1);
 	mMainChar->getWeaponManager()->setTarget(mLargeSphere, 200.0);
 	mMainChar->setTopCamera(mCameraArr[1]);
+	mMainChar->initParticleSystem();
+	mMainChar->setOffParticleSystem(true);
 
 	// set player's spotlight
 	mPlayerSpotlight = mSceneMgr->createLight("PlayerSpotlight");

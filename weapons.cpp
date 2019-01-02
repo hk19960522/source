@@ -65,11 +65,10 @@ void WEAPON::update(const Ogre::FrameEvent& evt)
 	Vector3 pos = newPos;
 	flg = projectScenePointOntoTerrain_NegDirection(pos);
     if (!flg) {
-		std::cout << "Out of range\n";
+		//std::cout << "Out of range\n";
 		mLifeTime = 0;
 		mSceneNode->setVisible(false);
 		mIsAlive = false;
-		return;
 		return;
     }
 	mVelocity += gravity * evt.timeSinceLastFrame;

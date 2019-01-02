@@ -9,6 +9,7 @@
 
 #include "game_obj.h"
 #include "weapons.h"
+#include "sound.h"
 
 class WEAPON_MANAGER : public GAME_OBJ {
 protected:
@@ -24,6 +25,7 @@ protected:
 	Vector3 mTargetPos;
 	Real mTargetRadius;
 	bool mFlgTarget;
+	SOUND *sound;
 
 public:
 	WEAPON_MANAGER(SceneManager *a_SceneMgr);

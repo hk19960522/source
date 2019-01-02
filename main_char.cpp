@@ -38,11 +38,11 @@ void MAIN_CHAR::attachCamera(Camera *a_Camera)
 
 void MAIN_CHAR::updateViewDirection()
 {
-	Vector3 actualDirection = mQuaternion*mInitDirection;
-	Quaternion q = mCamera->getOrientation();
-	Quaternion q0 = Quaternion(Radian(0), Vector3(1, 0, 0));
-	q = q*q0;
-	actualDirection = mCamera->getRealDirection();
+	//Vector3 actualDirection = mQuaternion*mInitDirection;
+	//Quaternion q = mCamera->getOrientation();
+	//Quaternion q0 = Quaternion(Radian(0), Vector3(1, 0, 0));
+	//q = q*q0;
+	Vector3 actualDirection = mCamera->getRealDirection();
 
 	Vector3 p = mSceneNode->getPosition();
 	actualDirection.y = 0.0;

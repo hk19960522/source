@@ -16,6 +16,9 @@ WEAPON_MANAGER::WEAPON_MANAGER(SceneManager *a_SceneMgr) : GAME_OBJ(a_SceneMgr)
 	mBulletsArr[i]->getEntity( )->setMaterialName("Examples/RustySteel");
 	}
 	mFlgTarget = false;
+
+	sound = new SOUND;
+	sound->init();
 }
 
 void WEAPON_MANAGER::setTarget(SceneNode *target, Real radius )
@@ -71,7 +74,9 @@ void WEAPON_MANAGER::update(const Ogre::FrameEvent& evt)
 		g->update(evt);
 
 		if ( mFlgTarget ) {
-			g->hitTarget_Sphere( mTargetNode->getPosition(), mTargetRadius );
+			if (g->hitTarget_Sphere( mTargetNode->getPosition(), mTargetRadius )) {
+				sound->play();
+			}
 		}
 		if (!g->isAlive()) {
 			mUsedWeaponsArr[i] = false;
